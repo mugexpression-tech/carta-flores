@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Una carta entre flores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Caveat:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{--night:#14202b;--ground:#0d1a15;--paper:#f6ecdc;--ink:#3a2f2a;--glow:#ffe9cf;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;height:100%;overflow:hidden;background:radial-gradient(120% 90% at 50% 100%,#24384a 0%,var(--night) 60%,#0c141c 100%);
+color:var(--glow);font-family:"Cormorant Garamond",Georgia,serif}
+.bg{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;gap:.2em;padding:0 6vw;
+font-style:italic;font-size:clamp(2.6rem,9vw,7rem);line-height:1.05;color:rgba(255,233,207,.09);user-select:none;pointer-events:none}
+.bg span{display:block;animation:drift 18s ease-in-out infinite alternate}
+.bg span:nth-child(2){margin-left:10vw;animation-delay:-6s}
+.bg span:nth-child(3){margin-left:4vw;animation-delay:-11s}
+@keyframes drift{to{transform:translateX(2.5vw)}}
+#garden{position:fixed;inset:0;width:100%;height:100%}
+.ground{fill:var(--ground)}
+.stem{fill:none;stroke:#5f8f6a;stroke-width:5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;
+transition:stroke-dashoffset 2.4s ease-out var(--d)}
+.leaf{fill:#4f7d5c;opacity:0;transition:opacity 1s ease calc(var(--d) + 1.4s)}
+.head{transform:scale(.16);transform-box:fill-box;transform-origin:center;
+transition:transform 1.8s cubic-bezier(.2,1.25,.4,1) calc(var(--d) + 2s)}
+.go .stem{stroke-dashoffset:0}.go .leaf{opacity:1}.go .head{transform:scale(1)}
+.sway{transform-box:fill-box;transform-origin:50% 100%;animation:sway var(--t) ease-in-out var(--s) infinite alternate}
+.petals{transform-box:fill-box;transform-origin:center;animation:flutter 3.4s ease-in-out var(--s) infinite alternate}
+@keyframes sway{from{transform:rotate(-3.5deg)}to{transform:rotate(3.5deg)}}
+@keyframes flutter{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+.hint{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 6vh);text-align:center;font-size:1.3rem;font-style:italic;
+color:rgba(255,233,207,.7);transition:opacity .8s}
+button{font:inherit;cursor:pointer}
+.open-btn{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 5vh);transform:translateX(-50%);opacity:0;pointer-events:none;
+font-size:1.4rem;font-style:italic;padding:.6em 1.6em;border-radius:999px;border:1px solid rgba(255,233,207,.6);
+background:rgba(20,32,43,.55);color:var(--glow);transition:opacity 1s,background .3s}
+.open-btn:hover{background:rgba(255,233,207,.15)}
+.ready .open-btn{opacity:1;pointer-events:auto}.ready .hint{opacity:0}
+.letter{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:4vh 5vw;
+background:rgba(10,18,24,.6);opacity:0;pointer-events:none;transition:opacity .9s}
+.show .letter{opacity:1;pointer-events:auto}
+.paper{width:min(580px,100%);max-height:84vh;overflow:auto;background:var(--paper);color:var(--ink);border-radius:4px;
+padding:clamp(1.4rem,5vw,2.6rem);font-family:Caveat,"Segoe Script",cursive;font-size:clamp(1.35rem,4.4vw,1.75rem);line-height:1.45;
+box-shadow:0 20px 60px rgba(0,0,0,.5);transform:translateY(24px) rotate(-.6deg);transition:transform 1s ease}
+.show .paper{transform:none}
+.inner{position:relative}.inner>*:not(.hearts){position:relative;z-index:1}
+.hearts{position:absolute;inset:0;pointer-events:none}.hearts svg{position:absolute}
+.paper p{margin:0 0 1em}.paper .sign{white-space:pre-line;margin-top:1.4em}
+.close{margin-top:.6em;border:0;background:none;color:#8a6a5a;font-size:1.15rem;text-decoration:underline;padding:0}
+.close:focus-visible,.open-btn:focus-visible{outline:2px solid #ffd166;outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.sway,.petals,.bg span{animation:none}.stem,.leaf,.head{transition-duration:.01s;transition-delay:0s}}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><span id="t1"></span><span id="t2"></span><span id="t3"></span></div>
+<svg id="garden" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
+<p class="hint">Las flores están creciendo…</p>
+<button class="open-btn" id="open">Leer la carta</button>
+<div class="letter" id="letter" role="dialog" aria-modal="true" aria-label="Carta">
+  <div class="paper" id="paper" tabindex="0"></div>
+</div>
+<script>
+/* ===== EDITA AQUÍ TU TEXTO ===== */
+const BG = ["Feliz cumpleaños", "amor", "de mi vida"];
+const LETTER = {
+  to: "Mi amada Mariely:",
+  body: [
+    "Hoy, hace 25 años, nació una pequeña bebé con el hermoso nombre de Mariely Alejandra. ¿Quién diría que 24 años después conocería a esta bebé que creció y se convirtió en la mujer más hermosa del mundo? Tal como una flor, floreció y se convirtió en la mayor atracción para una pequeña abejita llamada Simon. Esa abejita estuvo toda su vida revoloteando de un lado para otro, hasta que finalmente encontró la flor que tan feliz lo hizo.",
+    "Amor de mi vida, hoy, por tu cumpleaños, te regalo estas flores. Como no te las puedo entregar debido a la distancia, te doy estas flores digitales que, viendo el lado bueno, nunca se van a secar. Espero realmente poder darte pronto estas flores en persona, para que igualmente puedas tenerlas entre tus manos.",
+    "Mi amada Mariely, hoy cumples 25 añitos, y solo sé que quiero estar a tu lado por 25 años más, después de eso, otros 25 más, y auuuuún 25 añitos más.",
+    "Gracias por existir, amor de mi vida. Gracias por salir de la pancita de tu mamá ese 4 de octubre de 2001 y, desde ese momento, comenzar a formar el hilo rojo que algún día terminaría uniéndome a ti.",
+    "Feliz cumpleaños, mi amada mujer. Deseo que cumplas muchísimos años más y que podamos celebrar juntos muchísimos, muchísimos cumpleaños.",
+  ],
+  sign: 'TE AMO. <svg viewBox="0 0 24 22" width="1em" height="1em" style="vertical-align:-.12em" aria-hidden="true"><path d="M12 21C4 14.5 1 11 1 7a5.5 5.5 0 0 1 11-1.5A5.5 5.5 0 0 1 23 7c0 4-3 7.500-11 14z" fill="#8db4ea"/></svg>'
+};
+
+/* ================================= */
+
+["t1","t2","t3"].forEach((id,i)=>document.getElementById(id).textContent=BG[i]||"");
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const B=["#cfe6ff","#b5d3f5","#9cc2ee","#dbeaff","#a9c9f7","#c4d9f9"];
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const ell=(rx,ry,cx,cy,rot,f,extra="")=>`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${f}" ${extra} transform="rotate(${rot})"/>`;
+function hydrangea(r){
+  const L="#4f7d5c";let s='';
+  s+=`<ellipse cx="${-r*.8}" cy="${r*.5}" rx="${r*.6}" ry="${r*.3}" fill="${L}" transform="rotate(-25 ${-r*.8} ${r*.5})"/>`;
+  s+=`<ellipse cx="${r*.8}" cy="${r*.5}" rx="${r*.6}" ry="${r*.3}" fill="${L}" transform="rotate(25 ${r*.8} ${r*.5})"/>`;
+  s+=`<circle r="${r*.95}" fill="#8db4ea" opacity=".6"/>`;
+  const sh=["#e6f1ff","#d6e9ff","#c4dbfa","#b5d3f5","#a6c6f2","#98bdec"],n=44,g=2.39996,q=r*.28;
+  for(let i=n-1;i>=0;i--){
+    const d=Math.sqrt((i+.5)/n)*r*.86,a=i*g,x=Math.cos(a)*d,y=Math.sin(a)*d*.94;
+    const t=(x*.6+y*.8)/r,k=Math.max(0,Math.min(5,Math.floor((t+1)/2*6+rnd()*1.6-.8))),f=sh[k];
+    const sc=.85+.3*(1-d/r);
+    s+=`<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(i*37)%90}) scale(${sc.toFixed(2)})">`;
+    for(let p=0;p<4;p++)s+=`<ellipse cx="0" cy="${-q*.5}" rx="${q*.46}" ry="${q*.56}" fill="${f}" stroke="#8db4ea" stroke-width=".7" stroke-opacity=".45" transform="rotate(${p*90})"/>`;
+    s+=`<circle r="${q*.14}" fill="#f2f8ff"/></g>`}
+  return s}
+function gardenia(r){let s='';for(let k=0;k<6;k++)s+=ell(r*.36,r*.5,0,-r*.5,k*60,"#f4f9ff",'stroke="#c4d9f9" stroke-width="1.2"');
+  for(let k=0;k<5;k++)s+=ell(r*.27,r*.38,0,-r*.36,k*72+20,"#ffffff",'stroke="#d3e4fb" stroke-width="1"');
+  return s+`<circle r="${r*.15}" fill="#dbeaff"/><circle r="${r*.07}" fill="#b5d3f5"/>`}
+function petunia(r){let s='';for(let k=0;k<5;k++){const t=k*1.2566-1.5708;s+=`<circle cx="${(Math.cos(t)*r*.5).toFixed(1)}" cy="${(Math.sin(t)*r*.5).toFixed(1)}" r="${r*.52}" fill="${k%2?"#b5d3f5":"#a9c9f7"}"/>`}
+  s+=`<circle r="${r*.5}" fill="#8db4ea"/>`;
+  for(let k=0;k<5;k++){const t=k*1.2566-1.5708+.63;s+=`<line x1="0" y1="0" x2="${(Math.cos(t)*r*.9).toFixed(1)}" y2="${(Math.sin(t)*r*.9).toFixed(1)}" stroke="#6f9bd6" stroke-width="1.6" opacity=".55"/>`}
+  return s+`<circle r="${r*.2}" fill="#dbeaff"/>`}
+function lily(r){const P=`M0 0C${.3*r} ${-.3*r} ${.28*r} ${-.8*r} 0 ${-r}C${-.28*r} ${-.8*r} ${-.3*r} ${-.3*r} 0 0Z`;let s='';
+  for(let k=0;k<6;k++){const f=k%2?"#cfe6ff":"#b5d3f5";s+=`<g transform="rotate(${k*60})"><path d="${P}" fill="${f}" stroke="#8db4ea" stroke-width="1"/><line x1="0" y1="${-r*.1}" x2="0" y2="${-r*.8}" stroke="#8db4ea" stroke-width="1.4" opacity=".7"/></g>`}
+  for(let k=0;k<5;k++){const t=k*1.2566,x=Math.cos(t)*r*.5,y=Math.sin(t)*r*.5;s+=`<line x1="0" y1="0" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#e8f1ff" stroke-width="2"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r*.07}" fill="#f7d98b"/>`}
+  return s}
+const kinds=[[hydrangea,50],[gardenia,36],[petunia,34],[lily,52]];
+const N=30,list=[];
+for(let i=0;i<N;i++){const [fn,br]=kinds[(i*3+Math.floor(i/4))%4];
+  list.push({fn,r:br*(.85+rnd()*.3),x:24+i*(952/(N-1))+(rnd()-.5)*26,h:150+rnd()*330,d:rnd()*1.6,bend:(rnd()<.5?-1:1)*(14+rnd()*28),t:3.6+rnd()*2.4,s:-rnd()*5})}
+list.sort((a,b)=>b.h-a.h);
+let svg='<rect class="ground" x="0" y="560" width="1000" height="60"/>';
+list.forEach(f=>{const {h}=f;
+  svg+=`<g transform="translate(${f.x.toFixed(0)} 570)" style="--d:${f.d.toFixed(2)}s;--t:${f.t.toFixed(1)}s;--s:${f.s.toFixed(1)}s">
+  <g class="sway">
+    <path class="stem" pathLength="1" d="M0 0Q${f.bend.toFixed(0)} ${-h/2} 0 ${-h}"/>
+    <ellipse class="leaf" cx="-18" cy="${-h*.28}" rx="24" ry="8" transform="rotate(-32 -18 ${-h*.28})"/>
+    <ellipse class="leaf" cx="18" cy="${-h*.5}" rx="24" ry="8" transform="rotate(32 18 ${-h*.5})"/>
+    <g transform="translate(0 ${-h})"><g class="head"><g class="petals">${f.fn(f.r)}</g></g></g>
+  </g></g>`});
+document.getElementById("garden").innerHTML=svg;
+
+const root=document.body;
+requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById("garden").classList.add("go")));
+setTimeout(()=>root.classList.add("ready"),7200);
+
+document.getElementById("paper").innerHTML=
+  `<div class="inner"><div class="hearts" aria-hidden="true"></div><p>${LETTER.to}</p>`+LETTER.body.map(t=>`<p>${t}</p>`).join("")+
+  `<p class="sign">${LETTER.sign}</p><button class="close" id="close">Volver a las flores</button></div>`;
+function hearts(){const box=paper.querySelector(".hearts"),H=box.parentNode.offsetHeight,W=box.offsetWidth;if(!H)return;
+  const cols=["#cfe6ff","#9cc2ee","#8db4ea","#b5d3f5"];let out="",n=Math.round(H/70);
+  for(let i=0;i<n;i++){const pad=parseFloat(getComputedStyle(paper).paddingLeft)||22,sz=8+Math.random()*6,left=i%2===0,edge=sz+2+Math.random()*Math.max(0,pad-sz-4);
+    const y=(i+Math.random()*.7)/n*(H-24);
+    out+=`<svg viewBox="0 0 24 22" width="${sz.toFixed(0)}" height="${sz.toFixed(0)}" style="top:${y.toFixed(0)}px;${left?"left":"right"}:${(-edge).toFixed(0)}px;transform:rotate(${(Math.random()*50-25).toFixed(0)}deg);opacity:.8"><path d="M12 21C4 14.5 1 11 1 7a5.5 5.5 0 0 1 11-1.5A5.5 5.5 0 0 1 23 7c0 4-3 7.5-11 14z" fill="${cols[i%4]}"/></svg>`}
+  box.innerHTML=out}
+
+const paper=document.getElementById("paper");
+window.addEventListener("resize",()=>hearts());
+document.getElementById("open").onclick=()=>{root.classList.add("show");hearts();paper.scrollTop=0;paper.focus({preventScroll:true})};
+document.getElementById("close").onclick=()=>root.classList.remove("show");
+document.addEventListener("keydown",e=>{if(e.key==="Escape")root.classList.remove("show")});
+</script>
+</body>
+</html>
